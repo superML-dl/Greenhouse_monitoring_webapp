@@ -117,7 +117,7 @@ Backend default: `http://localhost:8000`
 6. Add environment variables in Vercel project settings:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `BACKEND_URL` (your deployed backend URL)
+   - `BACKEND_URL` (your deployed backend URL)  
 7. Deploy.
 
 ### Option B: Vercel CLI

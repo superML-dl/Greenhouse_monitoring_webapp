@@ -29,6 +29,27 @@ export async function GET(request: Request) {
     )
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      const email = user?.email?.toLowerCase() || ''
+      if (!email.endsWith('@gmail.com')) {
+        await supabase.auth.signOut()
+        return NextResponse.redirect(`${origin}/login?error=Gmail accounts are allowed`)
+      }
+
+      if (user) {
+        await supabase
+          .from('profiles')
+          .upsert({
+            id: user.id,
+            full_name: user.user_metadata?.full_name || user.user_metadata?.name || email,
+            role: 'User',
+            updated_at: new Date().toISOString(),
+          })
+      }
+
       return NextResponse.redirect(`${origin}${next}`)
     }
   }

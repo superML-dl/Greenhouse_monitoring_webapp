@@ -4,7 +4,7 @@
     "title": "Greenhouse Insect Monitor",
     "subtitle": "Sign in to manage and visualize AI-detected insect counts.",
     "terms": "By continuing, you agree to our Terms of Service and Privacy Policy.",
-    "restricted": "Secure access restricted to Admin, Engineers, and Farmers.",
+    "restricted": "Anyone with a Gmail account can sign in.",
     "sign_in_google": "Sign in with Google",
     "sign_in_github": "Sign in with GitHub"
   },

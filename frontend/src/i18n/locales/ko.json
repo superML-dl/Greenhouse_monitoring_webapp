@@ -4,7 +4,7 @@
     "title": "온실 해충 모니터",
     "subtitle": "AI 감지 곤충 수를 관리하고 시각화하려면 로그인하세요.",
     "terms": "계속하면 서비스 약관 및 개인정보 보호정책에 동의하게 됩니다.",
-    "restricted": "관리자, 엔지니어, 농부에게만 보안 접근이 허용됩니다.",
+    "restricted": "Gmail 계정이 있으면 누구나 로그인할 수 있습니다.",
     "sign_in_google": "Google로 로그인",
     "sign_in_github": "GitHub로 로그인"
   },

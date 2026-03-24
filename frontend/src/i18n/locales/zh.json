@@ -4,7 +4,7 @@
     "title": "温室害虫监测",
     "subtitle": "登录以管理和可视化AI检测的昆虫数量。",
     "terms": "继续即表示您同意我们的服务条款和隐私政策。",
-    "restricted": "安全访问仅限管理员、工程师和农民。",
+    "restricted": "任何拥有 Gmail 账号的用户都可以登录。",
     "sign_in_google": "使用Google登录",
     "sign_in_github": "使用GitHub登录"
   },

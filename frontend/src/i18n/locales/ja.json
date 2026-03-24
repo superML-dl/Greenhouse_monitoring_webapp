@@ -4,7 +4,7 @@
     "title": "温室害虫モニター",
     "subtitle": "AI検出の昆虫数を管理・可視化するにはサインインしてください。",
     "terms": "続行することで、利用規約とプライバシーポリシーに同意します。",
-    "restricted": "管理者、エンジニア、農家専用のセキュアアクセスです。",
+    "restricted": "Gmail アカウントを持つ誰でもサインインできます。",
     "sign_in_google": "Googleでサインイン",
     "sign_in_github": "GitHubでサインイン"
   },
