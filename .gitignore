@@ -1,0 +1,87 @@
+# -----------------------------
+# Security-first ignore rules
+# -----------------------------
+# Environment and secret files
+.env
+.env.*
+!.env.example
+!.env.template
+*.env
+*.secret
+*.secrets
+*.token
+*.tokens
+*.credentials
+*.creds
+
+# Private keys and certificates
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.csr
+*.der
+*.jks
+*.keystore
+*.asc
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+
+# Cloud and deployment credentials
+.vercel/
+.azure/
+.aws/
+.gcloud/
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# Database dumps and backups
+*.sql
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+*.bak
+*.backup
+*.dump
+
+# Logs and debug output
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Python cache and envs
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Node artifacts
+node_modules/
+.next/
+out/
+build/
+coverage/
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Project-specific local envs
+frontend/.env
+frontend/.env.*
+backend/.env
+backend/.env.*
