@@ -5,7 +5,6 @@ venv
 *.pyo
 *.pyd
 *.log
-weights/*
 node_modules
 frontend/
 __pycache__/
