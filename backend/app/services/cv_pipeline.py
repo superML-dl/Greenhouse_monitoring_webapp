@@ -252,22 +252,8 @@ class CVPipeline:
         return scan_path
 
     def load(self):
-        """Initialize both models on app startup."""
-        print("[Pipeline] Loading Stage 1 model (best_full.pt)...")
-        self.full_detector.load_model()
-        print("[Pipeline] Loading Stage 2 model (best_slice.pt)...")
-        self.slice_detector.load_model()
-
-        stage1_ok = self.full_detector.model is not None
-        stage2_ok = self.slice_detector.model is not None
-        if stage1_ok and stage2_ok:
-            print("[Pipeline] Both models loaded successfully.")
-        else:
-            print(
-                "[Pipeline] Model startup status: "
-                f"stage1={'ok' if stage1_ok else 'failed'}, "
-                f"stage2={'ok' if stage2_ok else 'failed'}."
-            )
+        """Initialize pipeline. Models will be loaded dynamically on demand to save memory."""
+        print("[Pipeline] Pipeline initialized. Models will load on-demand to prevent OOM on Render.")
 
     def process_image(
         self,
@@ -301,8 +287,17 @@ class CVPipeline:
         crop_y = prep.crop_box["y"]
 
         # ── Stage 1: Full-image pseudo-label inference on clean preprocessed image ──
+        import gc
+        print("[Pipeline] Loading Stage 1 model...")
+        self.full_detector.load_model()
+        
         stage1_input_image = processed_image.copy()
         stage1_pre = self.full_detector.predict(stage1_input_image, conf_threshold=conf_threshold_full)
+        
+        print("[Pipeline] Unloading Stage 1 model to free memory...")
+        self.full_detector.unload_model()
+        gc.collect()
+
         stage1_original = [
             self._shift_det_to_original(det, crop_x, crop_y)
             for det in stage1_pre
@@ -395,6 +390,9 @@ class CVPipeline:
                 "[Pipeline] Unclaimed Stage-1 annotations after slicing: "
                 f"{slicing_debug.get('unclaimed_annotations')} / {len(stage1_slicing_annotations)}"
             )
+
+        print("[Pipeline] Loading Stage 2 model...")
+        self.slice_detector.load_model()
 
         all_stage2_pre = []
         stage2_windows = []
@@ -501,6 +499,12 @@ class CVPipeline:
                 "pseudo_inside_count": int(slice_info.get("pseudo_inside_count", 0)),
                 "image": canvas_img.copy(),
             })
+
+            gc.collect()
+
+        print("[Pipeline] Unloading Stage 2 model to free memory...")
+        self.slice_detector.unload_model()
+        gc.collect()
 
         # ── Final: Merge on preprocessed space, then map to original ──
         merged_pre = merge_detections_dbscan(

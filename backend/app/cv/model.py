@@ -2,12 +2,14 @@
 YOLOv8 Model loading and inference module.
 """
 
+import gc
 from pathlib import Path
 
 class InsectDetector:
     def __init__(self, weights_path: str):
         self.weights_path = weights_path
         self.model = None
+        self._class_names: dict | None = None
 
     def load_model(self):
         """Load YOLOv8 model weights. Call once on startup."""
@@ -15,6 +17,9 @@ class InsectDetector:
             from ultralytics import YOLO
 
             self.model = YOLO(self.weights_path)
+            # Cache class names so we can access them even after model prediction
+            if self.model and hasattr(self.model, 'names'):
+                self._class_names = dict(self.model.names)
             print(f"Model loaded from {self.weights_path}")
         except Exception as e:
             err = str(e)
@@ -33,6 +38,8 @@ class InsectDetector:
 
                         self.model = YOLO(str(fallback_path))
                         self.weights_path = str(fallback_path)
+                        if self.model and hasattr(self.model, 'names'):
+                            self._class_names = dict(self.model.names)
                         print(
                             "Warning: .pt checkpoint is incompatible with current ultralytics "
                             f"({e}). Falling back to {fallback_path}."
@@ -48,6 +55,13 @@ class InsectDetector:
             print("Model inference will be unavailable until weights are provided.")
             self.model = None
 
+    def unload_model(self):
+        """Release model from memory. Useful on memory-constrained environments."""
+        if self.model is not None:
+            del self.model
+            self.model = None
+            gc.collect()
+
     def predict(self, image, conf_threshold: float = 0.1):
         """
         Run inference on a single image (PIL Image or numpy array).
@@ -59,17 +73,22 @@ class InsectDetector:
         results = self.model.predict(source=image, conf=conf_threshold, verbose=False)
 
         detections = []
+        names = self._class_names or (self.model.names if self.model else {})
         for result in results:
             boxes = result.boxes
             for box in boxes:
                 xyxy = box.xyxy[0].tolist()
                 conf = float(box.conf[0])
                 cls_id = int(box.cls[0])
-                cls_name = self.model.names.get(cls_id, f"class_{cls_id}")
+                cls_name = names.get(cls_id, f"class_{cls_id}")
                 detections.append({
                     "bbox": xyxy,  # [x1, y1, x2, y2]
                     "confidence": conf,
                     "class_name": cls_name,
                 })
+
+        # Free prediction results to reduce peak memory
+        del results
+        gc.collect()
 
         return detections
