@@ -3,7 +3,18 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8000'
+function getBackendUrl(): string {
+  const url = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL
+  if (!url) {
+    throw new Error(
+      'BACKEND_URL environment variable is not set. ' +
+      'Please add BACKEND_URL to your .env.local file (e.g., BACKEND_URL=http://localhost:8000)'
+    )
+  }
+  return url.replace(/\/+$/, '') // Remove trailing slashes
+}
+
+const BACKEND_URL = getBackendUrl()
 
 export async function saveTrapImage(formData: FormData) {
   const supabase = createClient()
