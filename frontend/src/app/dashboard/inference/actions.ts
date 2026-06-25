@@ -111,10 +111,20 @@ export async function saveTrapImage(formData: FormData) {
     inferenceForm.set('file', blob, file.name)
 
     const predictUrl = `${BACKEND_URL}/api/v1/inference/predict?trap_image_id=${encodeURIComponent(trapImage.id)}`
+
+    // Use AbortController with 120s timeout (Render free tier can be slow on cold start)
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 120_000)
+
+    console.log(`[Inference] Calling backend: ${predictUrl}`)
+
     const resp = await fetch(predictUrl, {
       method: 'POST',
       body: inferenceForm,
+      signal: controller.signal,
     })
+
+    clearTimeout(timeoutId)
 
     if (resp.ok) {
       const result = await resp.json()
@@ -167,7 +177,7 @@ export async function saveTrapImage(formData: FormData) {
     } else {
       // Inference failed but upload succeeded — mark as failed
       const errText = await resp.text()
-      console.error('Inference error:', errText)
+      console.error(`[Inference] Backend returned HTTP ${resp.status}:`, errText)
       const { error: failedStatusError } = await supabase
         .from('trap_images')
         .update({ status: 'failed' })
@@ -177,11 +187,12 @@ export async function saveTrapImage(formData: FormData) {
         console.error('Failed to set trap image status to failed:', failedStatusError)
       }
 
-      inferenceError = `Inference failed: ${errText.slice(0, 180)}`
+      inferenceError = `Inference failed (HTTP ${resp.status}): ${errText.slice(0, 180)}`
     }
-  } catch (e) {
-    // Backend unreachable — mark as failed
-    console.error('Backend unreachable:', e)
+  } catch (e: any) {
+    // Backend unreachable or timeout — mark as failed
+    const isTimeout = e?.name === 'AbortError'
+    console.error(`[Inference] ${isTimeout ? 'Request timed out' : 'Backend unreachable'}:`, e)
     const { error: failedStatusError } = await supabase
       .from('trap_images')
       .update({ status: 'failed' })
@@ -191,7 +202,9 @@ export async function saveTrapImage(formData: FormData) {
       console.error('Failed to set trap image status to failed after exception:', failedStatusError)
     }
 
-    inferenceError = 'Inference service is currently unreachable.'
+    inferenceError = isTimeout
+      ? 'Inference timed out. The backend may be starting up (cold start). Please try again in 1-2 minutes.'
+      : `Inference service is currently unreachable. Backend URL: ${BACKEND_URL?.slice(0, 40)}`
   }
 
   revalidatePath('/dashboard/inference')

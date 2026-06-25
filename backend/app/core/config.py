@@ -6,8 +6,11 @@ class Settings(BaseSettings):
     supabase_url: str = ""
     supabase_key: str = ""
 
-    # CORS origins
-    cors_origins: list[str] = ["http://localhost:3000"]
+    # CORS origins — additional origins can be set via CORS_ORIGINS env var on Render
+    # Vercel domains are handled via allow_origin_regex in main.py
+    cors_origins: list[str] = [
+        "http://localhost:3000",
+    ]
 
     # Two-stage model weights
     full_model_path: str = "weights/best_full.pt"
