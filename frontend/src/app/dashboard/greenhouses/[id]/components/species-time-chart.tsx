@@ -56,8 +56,11 @@ export function SpeciesTimeChart({ data }: SpeciesTimeChartProps) {
 
     const { dates, species } = data
 
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || 
+                   (document.documentElement.getAttribute('data-theme') === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+
     if (dates.length === 0 || species.length === 0) {
-      ctx.fillStyle = '#64748b'
+      ctx.fillStyle = isDark ? '#64748b' : '#94a3b8'
       ctx.font = '14px Inter, system-ui, sans-serif'
       ctx.textAlign = 'center'
       ctx.fillText(t('chart.no_species_data'), W / 2, H / 2)
@@ -74,13 +77,13 @@ export function SpeciesTimeChart({ data }: SpeciesTimeChartProps) {
     const yMax = yStep * 5
 
     // Title
-    ctx.fillStyle = '#e2e8f0'
+    ctx.fillStyle = isDark ? '#e2e8f0' : '#1e293b'
     ctx.font = 'bold 13px Inter, system-ui, sans-serif'
     ctx.textAlign = 'left'
     ctx.fillText(t('chart.species_detections_time'), padding.left, 22)
 
     // Grid
-    ctx.strokeStyle = '#1e293b'
+    ctx.strokeStyle = isDark ? '#1e293b' : '#e2e8f0'
     ctx.lineWidth = 1
     for (let i = 0; i <= 5; i++) {
       const y = padding.top + chartH - (i / 5) * chartH
@@ -88,7 +91,7 @@ export function SpeciesTimeChart({ data }: SpeciesTimeChartProps) {
       ctx.moveTo(padding.left, y)
       ctx.lineTo(W - padding.right, y)
       ctx.stroke()
-      ctx.fillStyle = '#64748b'
+      ctx.fillStyle = isDark ? '#64748b' : '#64748b'
       ctx.font = '11px Inter, system-ui, sans-serif'
       ctx.textAlign = 'right'
       ctx.fillText(String(Math.round(yMax * (i / 5))), padding.left - 8, y + 4)
@@ -98,7 +101,7 @@ export function SpeciesTimeChart({ data }: SpeciesTimeChartProps) {
     const gap = dates.length > 1 ? chartW / (dates.length - 1) : chartW
     dates.forEach((date, i) => {
       const x = padding.left + (dates.length > 1 ? gap * i : chartW / 2)
-      ctx.fillStyle = '#64748b'
+      ctx.fillStyle = isDark ? '#64748b' : '#64748b'
       ctx.font = '10px Inter, system-ui, sans-serif'
       ctx.textAlign = 'center'
       ctx.save()
@@ -143,7 +146,7 @@ export function SpeciesTimeChart({ data }: SpeciesTimeChartProps) {
         ctx.arc(x, y, isThisHovered ? 6 : isHovered ? 4.5 : 3.5, 0, Math.PI * 2)
         ctx.fillStyle = isDimmed ? color + '30' : color
         ctx.fill()
-        ctx.strokeStyle = '#0f172a'
+        ctx.strokeStyle = isDark ? '#0f172a' : '#ffffff'
         ctx.lineWidth = 1.5
         ctx.stroke()
       })
@@ -192,7 +195,7 @@ export function SpeciesTimeChart({ data }: SpeciesTimeChartProps) {
   }
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
       {/* Legend */}
       {data.species.length > 0 && (
         <div className="flex flex-wrap gap-3 mb-4 ml-12">
@@ -203,10 +206,10 @@ export function SpeciesTimeChart({ data }: SpeciesTimeChartProps) {
               onMouseLeave={() => setHoveredSpecies(null)}
               className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium transition-all ${
                 hoveredSpecies === sp.name
-                  ? 'bg-slate-700 text-white'
+                  ? 'bg-slate-800 dark:bg-slate-700 text-white'
                   : hoveredSpecies !== null
-                    ? 'opacity-40 text-slate-400'
-                    : 'text-slate-300 hover:bg-slate-800'
+                    ? 'opacity-40 text-slate-500 dark:text-slate-400'
+                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
             >
               <div
@@ -228,7 +231,7 @@ export function SpeciesTimeChart({ data }: SpeciesTimeChartProps) {
         />
         {tooltip && (
           <div
-            className="absolute z-10 pointer-events-none bg-slate-800 border border-slate-600 rounded-lg shadow-xl px-3 py-2 text-xs"
+            className="absolute z-10 pointer-events-none bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg shadow-xl px-3 py-2 text-xs"
             style={{
               left: Math.min(tooltip.x, (containerRef.current?.clientWidth || 300) - 160),
               top: tooltip.y - 75,
@@ -236,9 +239,9 @@ export function SpeciesTimeChart({ data }: SpeciesTimeChartProps) {
           >
             <div className="flex items-center gap-1.5 mb-1">
               <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: tooltip.color }} />
-              <span className="text-white font-semibold">{tooltip.species}</span>
+              <span className="text-slate-900 dark:text-white font-semibold">{tooltip.species}</span>
             </div>
-            <p className="text-slate-400">{tooltip.date}</p>
+            <p className="text-slate-500 dark:text-slate-400">{tooltip.date}</p>
             <p className="font-bold mt-0.5" style={{ color: tooltip.color }}>
               {tooltip.count} {t('overview.detections')}
             </p>

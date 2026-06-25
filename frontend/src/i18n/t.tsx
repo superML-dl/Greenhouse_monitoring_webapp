@@ -12,8 +12,3 @@ export function T({ tKey, className, as: Component = 'span' }: TranslatedTextPro
   const { t } = useTranslation()
   return <Component className={className}>{t(tKey)}</Component>
 }
-
-export function useT() {
-  const { t } = useTranslation()
-  return t
-}

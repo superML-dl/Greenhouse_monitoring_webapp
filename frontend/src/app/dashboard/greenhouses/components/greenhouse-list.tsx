@@ -62,8 +62,8 @@ export function GreenhouseList({ greenhouses }: GreenhouseListProps) {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">{t('greenhouse.title')}</h1>
-          <p className="text-slate-400 mt-1">{t('greenhouse.subtitle')}</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">{t('greenhouse.title')}</h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">{t('greenhouse.subtitle')}</p>
         </div>
         <Button onClick={() => setShowForm(true)} className="gap-2">
           <Plus className="h-4 w-4" />
@@ -73,10 +73,10 @@ export function GreenhouseList({ greenhouses }: GreenhouseListProps) {
 
       {/* Grid */}
       {greenhouses.length === 0 ? (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-16 text-center">
-          <Sprout className="h-12 w-12 text-slate-600 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-slate-300">{t('greenhouse.no_greenhouses')}</h3>
-          <p className="text-slate-500 mt-1 mb-6">{t('greenhouse.no_greenhouses')}</p>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-16 text-center">
+          <Sprout className="h-12 w-12 text-slate-400 dark:text-slate-600 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-slate-700 dark:text-slate-300">{t('greenhouse.no_greenhouses')}</h3>
+          <p className="text-slate-500 dark:text-slate-500 mt-1 mb-6">{t('greenhouse.no_greenhouses')}</p>
           <Button onClick={() => setShowForm(true)} className="gap-2">
             <Plus className="h-4 w-4" />
             {t('greenhouse.create')}
@@ -87,13 +87,13 @@ export function GreenhouseList({ greenhouses }: GreenhouseListProps) {
           {greenhouses.map((gh) => (
             <div
               key={gh.id}
-              className="bg-slate-900 border border-slate-800 rounded-xl p-5 hover:border-slate-700 transition-all group relative"
+              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 hover:border-emerald-500/50 dark:hover:border-slate-700 transition-all group relative"
             >
               {/* Action Buttons */}
               <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
                   onClick={() => setEditingGreenhouse(gh)}
-                  className="p-1.5 rounded-md bg-slate-800 text-slate-400 hover:text-emerald-400 hover:bg-emerald-400/10 transition-colors"
+                  className="p-1.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-400/10 transition-colors"
                   title={t('greenhouse.edit')}
                 >
                   <Pencil className="h-3.5 w-3.5" />
@@ -101,7 +101,7 @@ export function GreenhouseList({ greenhouses }: GreenhouseListProps) {
                 <button
                   onClick={() => handleDelete(gh.id)}
                   disabled={deletingId === gh.id}
-                  className="p-1.5 rounded-md bg-slate-800 text-slate-400 hover:text-red-400 hover:bg-red-400/10 transition-colors disabled:opacity-50"
+                  className="p-1.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-400/10 transition-colors disabled:opacity-50"
                   title={t('greenhouse.delete')}
                 >
                   <Trash2 className="h-3.5 w-3.5" />
@@ -117,34 +117,34 @@ export function GreenhouseList({ greenhouses }: GreenhouseListProps) {
                 </div>
 
                 {/* Title */}
-                <h3 className="text-base font-semibold text-white mb-2 group-hover:text-emerald-400 transition-colors">
+                <h3 className="text-base font-semibold text-slate-900 dark:text-white mb-2 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                   {gh.name}
                 </h3>
 
                 {/* Meta */}
-                <div className="space-y-1.5 text-sm text-slate-400">
+                <div className="space-y-1.5 text-sm text-slate-500 dark:text-slate-400">
                   {gh.location && (
                     <div className="flex items-center gap-2">
-                      <MapPin className="h-3.5 w-3.5 text-slate-500" />
+                      <MapPin className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
                       <span className="truncate">{gh.location}</span>
                     </div>
                   )}
                   {gh.crop_type && (
                     <div className="flex items-center gap-2">
-                      <Leaf className="h-3.5 w-3.5 text-slate-500" />
+                      <Leaf className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
                       <span>{gh.crop_type}</span>
                     </div>
                   )}
                   {gh.area_sqm && (
                     <div className="flex items-center gap-2">
-                      <Ruler className="h-3.5 w-3.5 text-slate-500" />
+                      <Ruler className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
                       <span>{gh.area_sqm} m²</span>
                     </div>
                   )}
                 </div>
 
                 {gh.description && (
-                  <p className="mt-3 text-xs text-slate-500 line-clamp-2">{gh.description}</p>
+                  <p className="mt-3 text-xs text-slate-500 dark:text-slate-500 line-clamp-2">{gh.description}</p>
                 )}
               </Link>
             </div>

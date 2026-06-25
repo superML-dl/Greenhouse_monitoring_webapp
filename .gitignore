@@ -73,6 +73,7 @@ node_modules/
 out/
 build/
 coverage/
+*.tsbuildinfo
 
 # IDE and OS files
 .vscode/

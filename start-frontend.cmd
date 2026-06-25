@@ -1,3 +1,3 @@
 @echo off
 setlocal
-npm --prefix frontend run dev
+npm --prefix frontend run dev -- --turbo

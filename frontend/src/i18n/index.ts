@@ -29,12 +29,6 @@ export const LOCALE_FLAGS: Record<Locale, string> = {
 
 export const DEFAULT_LOCALE: Locale = 'en'
 
-type NestedKeyOf<T> = T extends object
-  ? { [K in keyof T & string]: T[K] extends object ? `${K}.${NestedKeyOf<T[K]>}` : K }[keyof T & string]
-  : never
-
-export type TranslationKey = NestedKeyOf<typeof en>
-
 export function getTranslation(locale: Locale, key: string): string {
   const keys = key.split('.')
   let value: any = locales[locale]

@@ -35,6 +35,25 @@ echo   API Docs : http://localhost:8000/docs
 echo  ============================================
 echo.
 
-:: Wait 4 seconds then auto-open browser
-timeout /t 4 /nobreak >nul
-start "" http://localhost:3000
+:: Wait until frontend is actually listening on port 3000 (max ~60s)
+set /a WAIT_COUNT=0
+:wait_frontend
+set /a WAIT_COUNT+=1
+for /f "tokens=5" %%a in ('netstat -ano ^| findstr :3000 ^| findstr LISTENING 2^>nul') do (
+    set "PORT_READY=1"
+)
+
+if defined PORT_READY (
+    echo  [ok] Frontend is ready on port 3000. Opening browser...
+    start "" http://localhost:3000
+    goto :eof
+)
+
+if %WAIT_COUNT% GEQ 30 (
+    echo  [warn] Frontend not ready yet. Open manually: http://localhost:3000
+    goto :eof
+)
+
+echo  [wait] Waiting for frontend to start... (%WAIT_COUNT%/30)
+timeout /t 2 /nobreak >nul
+goto :wait_frontend

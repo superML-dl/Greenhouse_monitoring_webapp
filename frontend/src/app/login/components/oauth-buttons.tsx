@@ -4,10 +4,12 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { useState } from 'react'
 import { Loader2 } from 'lucide-react'
+import { useTranslation } from '@/i18n/provider'
 
 export function OAuthButtons() {
   const [isLoading, setIsLoading] = useState(false)
   const supabase = createClient()
+  const { t } = useTranslation()
 
   const handleGoogleLogin = async () => {
     try {
@@ -55,7 +57,7 @@ export function OAuthButtons() {
           <path d="M1 1h22v22H1z" fill="none" />
         </svg>
       )}
-      Continue with Google
+      {t('login.sign_in_google')}
     </Button>
   )
 }

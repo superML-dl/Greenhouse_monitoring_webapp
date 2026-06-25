@@ -1,6 +1,5 @@
 'use client'
 
-import { Leaf } from 'lucide-react'
 import { OAuthButtons } from './components/oauth-buttons'
 import { LanguageSwitcher } from '@/components/layout/language-switcher'
 import { useTranslation } from '@/i18n/provider'
@@ -13,21 +12,21 @@ export default function LoginPage({
   const { t } = useTranslation()
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col justify-center items-center p-4">
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-950 flex flex-col justify-center items-center p-4">
       {/* Language switcher in top-right */}
       <div className="fixed top-4 right-4 z-50">
         <LanguageSwitcher />
       </div>
 
-      <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-8 flex flex-col gap-6">
+      <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-8 flex flex-col gap-6">
         <div className="flex flex-col items-center gap-3 text-center">
-          <div className="w-12 h-12 bg-emerald-500/20 text-emerald-400 rounded-xl flex items-center justify-center mb-2">
-            <Leaf size={28} />
+          <div className="w-14 h-14 rounded-xl bg-slate-100 dark:bg-slate-100 p-1.5 flex items-center justify-center mb-2">
+            <img src="/assets/logokhoa.png" alt={t('app_name')} className="h-full w-full object-contain" />
           </div>
-          <h1 className="text-2xl font-semibold text-white tracking-tight">
+          <h1 className="text-2xl font-semibold text-slate-900 dark:text-white tracking-tight">
             {t('login.title')}
           </h1>
-          <p className="text-slate-400 text-sm">
+          <p className="text-slate-500 dark:text-slate-400 text-sm">
             {t('login.subtitle')}
           </p>
         </div>

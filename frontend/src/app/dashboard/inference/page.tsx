@@ -27,19 +27,19 @@ export default async function InferencePage({
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <T tKey="inference.title" as="h1" className="text-2xl font-bold tracking-tight text-white" />
-        <T tKey="inference.subtitle" as="p" className="text-slate-400 mt-1" />
+        <T tKey="inference.title" as="h1" className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white" />
+        <T tKey="inference.subtitle" as="p" className="text-slate-500 dark:text-slate-400 mt-1" />
       </div>
 
       <UploadForm greenhouses={greenhouses || []} />
 
       {/* Recent Uploads */}
       <div>
-        <T tKey="inference.recent_uploads" as="h2" className="text-lg font-semibold text-white mb-4" />
+        <T tKey="inference.recent_uploads" as="h2" className="text-lg font-semibold text-slate-900 dark:text-white mb-4" />
         {trapImages.length === 0 && page === 1 ? (
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-10 text-center">
-            <CalendarDays className="h-10 w-10 text-slate-600 mx-auto mb-3" />
-            <T tKey="inference.no_uploads" as="p" className="text-slate-400 text-sm" />
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-10 text-center">
+            <CalendarDays className="h-10 w-10 text-slate-400 dark:text-slate-600 mx-auto mb-3" />
+            <T tKey="inference.no_uploads" as="p" className="text-slate-500 dark:text-slate-400 text-sm" />
           </div>
         ) : (
           <RecentUploadsTable

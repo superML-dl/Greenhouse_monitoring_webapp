@@ -33,19 +33,13 @@ export async function GET(request: Request) {
         data: { user },
       } = await supabase.auth.getUser()
 
-      const email = user?.email?.toLowerCase() || ''
-      if (!email.endsWith('@gmail.com')) {
-        await supabase.auth.signOut()
-        return NextResponse.redirect(`${origin}/login?error=Gmail accounts are allowed`)
-      }
-
       if (user) {
         await supabase
           .from('profiles')
           .upsert({
             id: user.id,
-            full_name: user.user_metadata?.full_name || user.user_metadata?.name || email,
-            role: 'User',
+            full_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email,
+            role: 'Farmer',
             updated_at: new Date().toISOString(),
           })
       }

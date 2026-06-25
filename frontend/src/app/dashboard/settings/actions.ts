@@ -11,26 +11,62 @@ export async function updateProfile(formData: FormData) {
     return
   }
 
-  const fullName = formData.get('fullName') as string
-  const role = formData.get('role') as string
+  const fullName = (formData.get('fullName') as string)?.trim()
+  const avatarFile = formData.get('avatar')
 
   if (!fullName) {
     return
   }
 
-  // Ensure role is valid
-  if (!['Admin', 'Engineer', 'Farmer'].includes(role)) {
-    return
+  let avatarUrl: string | undefined
+  if (avatarFile instanceof File && avatarFile.size > 0) {
+    if (!avatarFile.type.startsWith('image/')) {
+      return
+    }
+    if (avatarFile.size > 5 * 1024 * 1024) {
+      return
+    }
+
+    const extension = avatarFile.name.split('.').pop() || 'jpg'
+    const filePath = `${user.id}/avatar.${extension}`
+
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(filePath, avatarFile, {
+        upsert: true,
+        contentType: avatarFile.type,
+        cacheControl: '3600',
+      })
+
+    if (uploadError) {
+      console.error('Error uploading avatar:', uploadError)
+    } else {
+      const { data: publicUrlData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath)
+
+      avatarUrl = publicUrlData.publicUrl
+    }
+  }
+
+  const payload: {
+    id: string
+    full_name: string
+    updated_at: string
+    avatar_url?: string
+  } = {
+    id: user.id,
+    full_name: fullName,
+    updated_at: new Date().toISOString(),
+  }
+
+  if (avatarUrl) {
+    payload.avatar_url = avatarUrl
   }
 
   const { error } = await supabase
     .from('profiles')
-    .upsert({
-      id: user.id,
-      full_name: fullName,
-      role: role,
-      updated_at: new Date().toISOString()
-    })
+    .upsert(payload)
 
   if (error) {
     console.error('Error updating profile:', error)
@@ -38,4 +74,5 @@ export async function updateProfile(formData: FormData) {
   }
 
   revalidatePath('/dashboard/settings')
+  revalidatePath('/dashboard')
 }

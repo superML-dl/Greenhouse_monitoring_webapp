@@ -63,6 +63,35 @@ export async function saveTrapImage(formData: FormData) {
     return { error: `DB error: ${insertError.message}` }
   }
 
+  let visual: {
+    original_image_width: number
+    original_image_height: number
+    image_width: number
+    image_height: number
+    windows_scanned: number
+    patches_processed: number
+    preprocess: {
+      contour_found: boolean
+      crop_box_original: {
+        x: number
+        y: number
+        w: number
+        h: number
+      }
+      hsv_image_data_url: string
+      processed_image_data_url: string
+      mask_image_data_url: string
+      boxed_image_data_url: string
+    } | null
+    stage1_detections: any[]
+    stage2_detections: any[]
+    stage2_detections_preprocessed: any[]
+    stage2_scan_path: any[]
+    stage2_valid_slices: any[]
+    stage2_slicing_debug: any
+  } | null = null
+  let inferenceError: string | null = null
+
   // Step 3: Call FastAPI backend for inference
   try {
     const fileBytes = await file.arrayBuffer()
@@ -70,13 +99,30 @@ export async function saveTrapImage(formData: FormData) {
     const inferenceForm = new FormData()
     inferenceForm.set('file', blob, file.name)
 
-    const resp = await fetch(`${BACKEND_URL}/api/v1/inference/predict`, {
+    const predictUrl = `${BACKEND_URL}/api/v1/inference/predict?trap_image_id=${encodeURIComponent(trapImage.id)}`
+    const resp = await fetch(predictUrl, {
       method: 'POST',
       body: inferenceForm,
     })
 
     if (resp.ok) {
       const result = await resp.json()
+
+      visual = {
+        original_image_width: result.original_image_width || 0,
+        original_image_height: result.original_image_height || 0,
+        image_width: result.image_width,
+        image_height: result.image_height,
+        windows_scanned: result.windows_scanned || 0,
+        patches_processed: result.patches_processed || 0,
+        preprocess: result.preprocess || null,
+        stage1_detections: result.stage1?.detections || [],
+        stage2_detections: result.stage2?.detections || [],
+        stage2_detections_preprocessed: result.stage2?.detections_preprocessed || [],
+        stage2_scan_path: result.stage2?.scan_path || [],
+        stage2_valid_slices: result.stage2?.valid_slices || [],
+        stage2_slicing_debug: result.stage2?.slicing_debug || null,
+      }
 
       // Save detections from Stage 2 (final refined results)
       const detections = result.stage2?.detections || []
@@ -91,38 +137,60 @@ export async function saveTrapImage(formData: FormData) {
           bbox_h: det.bbox_h,
         }))
 
-        await supabase.from('insect_detections').insert(inserts)
+        const { error: detectionInsertError } = await supabase.from('insect_detections').insert(inserts)
+        if (detectionInsertError) {
+          console.error('Detection insert error:', detectionInsertError)
+        }
       }
 
       // Update trap image status to processed
-      await supabase
+      const { error: processedStatusError } = await supabase
         .from('trap_images')
-        .update({
-          status: 'processed',
-          updated_at: new Date().toISOString(),
-        })
+        .update({ status: 'processed' })
         .eq('id', trapImage.id)
+
+      if (processedStatusError) {
+        console.error('Failed to set trap image status to processed:', processedStatusError)
+        inferenceError = 'Inference completed, but status update failed. Please refresh and try again.'
+      }
     } else {
-      // Inference failed but upload succeeded — mark as pending
+      // Inference failed but upload succeeded — mark as failed
       const errText = await resp.text()
       console.error('Inference error:', errText)
-      await supabase
+      const { error: failedStatusError } = await supabase
         .from('trap_images')
-        .update({ status: 'pending' })
+        .update({ status: 'failed' })
         .eq('id', trapImage.id)
+
+      if (failedStatusError) {
+        console.error('Failed to set trap image status to failed:', failedStatusError)
+      }
+
+      inferenceError = `Inference failed: ${errText.slice(0, 180)}`
     }
   } catch (e) {
-    // Backend unreachable — mark as pending for retry
+    // Backend unreachable — mark as failed
     console.error('Backend unreachable:', e)
-    await supabase
+    const { error: failedStatusError } = await supabase
       .from('trap_images')
-      .update({ status: 'pending' })
+      .update({ status: 'failed' })
       .eq('id', trapImage.id)
+
+    if (failedStatusError) {
+      console.error('Failed to set trap image status to failed after exception:', failedStatusError)
+    }
+
+    inferenceError = 'Inference service is currently unreachable.'
   }
 
   revalidatePath('/dashboard/inference')
   revalidatePath(`/dashboard/greenhouses/${greenhouseId}`)
-  return { success: true, trapImageId: trapImage.id }
+
+  if (inferenceError) {
+    return { error: inferenceError, trapImageId: trapImage.id, visual }
+  }
+
+  return { success: true, trapImageId: trapImage.id, visual }
 }
 
 export async function deleteTrapImage(id: string) {
@@ -158,7 +226,31 @@ export async function getTrapImages(page: number = 1, perPage: number = 10) {
     console.error('Error fetching trap images:', error)
     return { data: [], total: 0 }
   }
-  return { data: data || [], total: count || 0 }
+
+  const rows = data || []
+  const pendingButDetectedIds = rows
+    .filter((img: any) => img.status === 'pending' && (img.insect_detections?.[0]?.count || 0) > 0)
+    .map((img: any) => img.id)
+
+  if (pendingButDetectedIds.length > 0) {
+    const { error: reconcileError } = await supabase
+      .from('trap_images')
+      .update({ status: 'processed' })
+      .in('id', pendingButDetectedIds)
+
+    if (reconcileError) {
+      console.error('Failed to reconcile pending trap image statuses:', reconcileError)
+    }
+  }
+
+  const pendingIdSet = new Set(pendingButDetectedIds)
+  const normalizedRows = rows.map((img: any) => (
+    pendingIdSet.has(img.id)
+      ? { ...img, status: 'processed' }
+      : img
+  ))
+
+  return { data: normalizedRows, total: count || 0 }
 }
 
 export async function getTrapImageDetails(id: string) {

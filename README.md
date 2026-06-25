@@ -105,4 +105,34 @@ npm run dev
 Frontend default: `http://localhost:3000`
 Backend default: `http://localhost:8000`
 
+## Docker Deployment (Frontend + Backend)
+
+### 1) Prepare Docker environment variables
+
+Copy `.env.docker.example` to `.env` in repository root and fill in Supabase values.
+
+### 2) Ensure backend env exists
+
+Backend service reads `backend/.env` (Supabase service key, model paths, CORS origins).
+
+### 3) Build and run all services
+
+```bat
+docker compose up -d --build
+```
+
+### 4) Check status and logs
+
+```bat
+docker compose ps
+docker compose logs -f backend
+docker compose logs -f frontend
+```
+
+### 5) Stop services
+
+```bat
+docker compose down
+```
+
 

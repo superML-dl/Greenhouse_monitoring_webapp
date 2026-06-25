@@ -26,7 +26,7 @@ export function LanguageSwitcher() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+        className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
         title={t('common.language')}
       >
         <Globe className="h-4 w-4" />
@@ -34,15 +34,15 @@ export function LanguageSwitcher() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-1 w-44 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl overflow-hidden z-50">
+        <div className="absolute right-0 top-full mt-1 w-44 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl overflow-hidden z-50">
           {LOCALES.map((loc) => (
             <button
               key={loc}
               onClick={() => { setLocale(loc); setOpen(false) }}
               className={`flex items-center gap-2.5 w-full px-3 py-2 text-sm transition-colors ${
                 loc === locale
-                  ? 'bg-emerald-500/10 text-emerald-400'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800'
               }`}
             >
               <span className="text-base">{LOCALE_FLAGS[loc]}</span>

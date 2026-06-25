@@ -23,7 +23,6 @@ export default async function DashboardLayout({
 
   const profileData = {
     fullName: profile?.full_name || user.email || 'User',
-    role: profile?.role || 'User',
     email: user.email || '',
     avatarUrl: profile?.avatar_url || null,
   }

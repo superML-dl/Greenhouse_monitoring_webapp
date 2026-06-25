@@ -1,11 +1,15 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { saveTrapImage } from '../actions'
 import { Upload, X, Loader2, CheckCircle2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useTranslation } from '@/i18n/provider'
+import {
+  InferenceVisualizer,
+  type InferenceVisualData,
+} from '@/app/dashboard/inference/components/inference-visualizer'
 
 interface Greenhouse {
   id: string
@@ -24,6 +28,27 @@ interface FilePreview {
   error?: string
 }
 
+type PipelineStepKey = 'validate' | 'upload' | 'inference' | 'store'
+
+interface PipelineState {
+  fileName: string
+  fileIndex: number
+  total: number
+  activeStep: PipelineStepKey
+  completed: PipelineStepKey[]
+  status: 'running' | 'done' | 'error'
+  error?: string
+}
+
+const PIPELINE_STEPS: PipelineStepKey[] = ['validate', 'upload', 'inference', 'store']
+
+const PIPELINE_STEP_LABELS: Record<PipelineStepKey, string> = {
+  validate: 'inference.step_validate',
+  upload: 'inference.step_upload',
+  inference: 'inference.step_inference',
+  store: 'inference.step_store',
+}
+
 export function UploadForm({ greenhouses }: UploadFormProps) {
   const { t } = useTranslation()
   const router = useRouter()
@@ -37,8 +62,19 @@ export function UploadForm({ greenhouses }: UploadFormProps) {
   const [isUploading, setIsUploading] = useState(false)
   const [currentStep, setCurrentStep] = useState('')
   const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 })
+  const [pipelineState, setPipelineState] = useState<PipelineState | null>(null)
+  const [visualData, setVisualData] = useState<InferenceVisualData | null>(null)
+  const [visualStatus, setVisualStatus] = useState<'running' | 'done' | 'error'>('done')
   const [dragOver, setDragOver] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+  useEffect(() => {
+    if (!selectedGreenhouse && greenhouses.length > 0) {
+      setSelectedGreenhouse(greenhouses[0].id)
+    }
+  }, [greenhouses, selectedGreenhouse])
 
   const addFiles = useCallback((newFiles: FileList | File[]) => {
     const imageFiles = Array.from(newFiles).filter((f) =>
@@ -92,12 +128,55 @@ export function UploadForm({ greenhouses }: UploadFormProps) {
     for (let idx = 0; idx < pendingIndices.length; idx++) {
       const i = pendingIndices[idx]
 
+      setVisualStatus('running')
+      setVisualData({
+        originalImageUrl: files[i].preview,
+        hsvImageUrl: null,
+        preprocessedImageUrl: files[i].preview,
+        maskImageUrl: null,
+        boxedImageUrl: null,
+        originalImageWidth: 0,
+        originalImageHeight: 0,
+        preprocessedImageWidth: 0,
+        preprocessedImageHeight: 0,
+        windowsScanned: 0,
+        patchesProcessed: 0,
+        preprocess: null,
+        stage1Detections: [],
+        stage2DetectionsPreprocessed: [],
+        stage2DetectionsOriginal: [],
+        stage2ScanPath: [],
+        stage2ValidSlices: [],
+        stage2SlicingDebug: null,
+      })
+
+      setPipelineState({
+        fileName: files[i].file.name,
+        fileIndex: idx + 1,
+        total: totalCount,
+        activeStep: 'validate',
+        completed: [],
+        status: 'running',
+      })
+      await delay(120)
+
       // Phase 1: Uploading
       setCurrentStep(
         t('inference.uploading_image')
           .replace('{current}', String(idx + 1))
           .replace('{total}', String(totalCount))
       )
+
+      setPipelineState((prev) => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          activeStep: 'upload',
+          completed: ['validate'],
+          status: 'running',
+        }
+      })
+
       setFiles((prev) => {
         const updated = [...prev]
         updated[i] = { ...updated[i], status: 'uploading' }
@@ -118,6 +197,17 @@ export function UploadForm({ greenhouses }: UploadFormProps) {
         updated[i] = { ...updated[i], status: 'inferencing' }
         return updated
       })
+
+      setPipelineState((prev) => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          activeStep: 'inference',
+          completed: ['validate', 'upload'],
+          status: 'running',
+        }
+      })
+
       setCurrentStep(
         t('inference.processing_image')
           .replace('{current}', String(idx + 1))
@@ -125,6 +215,40 @@ export function UploadForm({ greenhouses }: UploadFormProps) {
       )
 
       const result = await saveTrapImage(formData)
+
+      const visual = result.visual
+      if (visual) {
+        setVisualData({
+          originalImageUrl: files[i].preview,
+          hsvImageUrl: visual.preprocess?.hsv_image_data_url || null,
+          preprocessedImageUrl: visual.preprocess?.processed_image_data_url || files[i].preview,
+          maskImageUrl: visual.preprocess?.mask_image_data_url || null,
+          boxedImageUrl: visual.preprocess?.boxed_image_data_url || null,
+          originalImageWidth: visual.original_image_width || 0,
+          originalImageHeight: visual.original_image_height || 0,
+          preprocessedImageWidth: visual.image_width || 0,
+          preprocessedImageHeight: visual.image_height || 0,
+          windowsScanned: visual.windows_scanned || 0,
+          patchesProcessed: visual.patches_processed || 0,
+          preprocess: visual.preprocess
+            ? {
+              contourFound: !!visual.preprocess.contour_found,
+              cropBoxOriginal: {
+                x: visual.preprocess.crop_box_original?.x || 0,
+                y: visual.preprocess.crop_box_original?.y || 0,
+                w: visual.preprocess.crop_box_original?.w || 0,
+                h: visual.preprocess.crop_box_original?.h || 0,
+              },
+            }
+            : null,
+          stage1Detections: visual.stage1_detections || [],
+          stage2DetectionsPreprocessed: visual.stage2_detections_preprocessed || [],
+          stage2DetectionsOriginal: visual.stage2_detections || [],
+          stage2ScanPath: visual.stage2_scan_path || [],
+          stage2ValidSlices: visual.stage2_valid_slices || [],
+          stage2SlicingDebug: visual.stage2_slicing_debug || null,
+        })
+      }
 
       setFiles((prev) => {
         const updated = [...prev]
@@ -135,6 +259,38 @@ export function UploadForm({ greenhouses }: UploadFormProps) {
         }
         return updated
       })
+
+      if (result.success) {
+        setVisualStatus('done')
+        setPipelineState((prev) => {
+          if (!prev) return prev
+          return {
+            ...prev,
+            activeStep: 'store',
+            completed: ['validate', 'upload', 'inference'],
+            status: 'running',
+          }
+        })
+        await delay(120)
+        setPipelineState((prev) => {
+          if (!prev) return prev
+          return {
+            ...prev,
+            completed: [...PIPELINE_STEPS],
+            status: 'done',
+          }
+        })
+      } else {
+        setVisualStatus('error')
+        setPipelineState((prev) => {
+          if (!prev) return prev
+          return {
+            ...prev,
+            status: 'error',
+            error: result.error || t('inference.pipeline_failed'),
+          }
+        })
+      }
 
       // Update progress AFTER each image is done
       setUploadProgress({ current: idx + 1, total: totalCount })
@@ -154,15 +310,15 @@ export function UploadForm({ greenhouses }: UploadFormProps) {
   return (
     <div className="space-y-6">
       {/* Greenhouse Selection + Meta */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
-        <h2 className="text-lg font-semibold text-white mb-4">{t('inference.title')}</h2>
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">{t('inference.title')}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-slate-300">{t('inference.greenhouse')} *</label>
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('inference.greenhouse')} *</label>
             <select
               value={selectedGreenhouse}
               onChange={(e) => setSelectedGreenhouse(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
+              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
             >
               <option value="">{t('inference.select_greenhouse')}...</option>
               {greenhouses.map((gh) => (
@@ -171,34 +327,37 @@ export function UploadForm({ greenhouses }: UploadFormProps) {
                 </option>
               ))}
             </select>
+            {greenhouses.length === 0 && (
+              <p className="text-xs text-amber-400">{t('inference.no_greenhouse_hint')}</p>
+            )}
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-slate-300">{t('inference.capture_time')}</label>
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('inference.capture_time')}</label>
             <input
               type="datetime-local"
               value={captureTimestamp}
               onChange={(e) => setCaptureTimestamp(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
+              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-slate-300">{t('inference.temperature')} (°C)</label>
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('inference.temperature')} (°C)</label>
             <input
               type="number" step="0.1"
               value={temperature}
               onChange={(e) => setTemperature(e.target.value)}
               placeholder={t('inference.temperature_placeholder')}
-              className="w-full bg-slate-950 border border-slate-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
+              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-slate-300">{t('inference.humidity')} (%)</label>
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('inference.humidity')} (%)</label>
             <input
               type="number" step="0.1"
               value={humidity}
               onChange={(e) => setHumidity(e.target.value)}
               placeholder={t('inference.humidity_placeholder')}
-              className="w-full bg-slate-950 border border-slate-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
+              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
             />
           </div>
         </div>
@@ -210,9 +369,9 @@ export function UploadForm({ greenhouses }: UploadFormProps) {
         onDragOver={handleDragOver}
         onDragLeave={() => setDragOver(false)}
         onClick={() => inputRef.current?.click()}
-        className={`border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all ${dragOver
-            ? 'border-emerald-500 bg-emerald-500/5'
-            : 'border-slate-700 hover:border-slate-600 bg-slate-900/50'
+        className={`bg-white dark:bg-transparent border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all ${dragOver
+            ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/5'
+            : 'border-slate-300 hover:border-slate-400 dark:border-slate-700 dark:hover:border-slate-600 dark:bg-slate-900/50'
           }`}
       >
         <input
@@ -223,8 +382,8 @@ export function UploadForm({ greenhouses }: UploadFormProps) {
           className="hidden"
           onChange={(e) => e.target.files && addFiles(e.target.files)}
         />
-        <Upload className={`h-10 w-10 mx-auto mb-3 ${dragOver ? 'text-emerald-400' : 'text-slate-500'}`} />
-        <p className="text-white font-medium">
+        <Upload className={`h-10 w-10 mx-auto mb-3 ${dragOver ? 'text-emerald-500 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'}`} />
+        <p className="text-slate-900 dark:text-white font-medium">
           {t('inference.drop_images')}
         </p>
         <p className="text-slate-500 text-sm mt-1">
@@ -234,17 +393,17 @@ export function UploadForm({ greenhouses }: UploadFormProps) {
 
       {/* Progress Bar - shown during upload */}
       {isUploading && (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin text-emerald-400" />
-              <span className="text-sm font-medium text-white">{currentStep}</span>
+              <Loader2 className="h-4 w-4 animate-spin text-emerald-500 dark:text-emerald-400" />
+              <span className="text-sm font-medium text-slate-900 dark:text-white">{currentStep}</span>
             </div>
-            <span className="text-sm font-bold text-emerald-400">{progressPercent}%</span>
+            <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{progressPercent}%</span>
           </div>
-          <div className="w-full bg-slate-800 rounded-full h-3 overflow-hidden">
+          <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-3 overflow-hidden">
             <div
-              className="bg-gradient-to-r from-emerald-600 to-emerald-400 h-full rounded-full transition-all duration-500 ease-out"
+              className="bg-gradient-to-r from-emerald-500 to-emerald-400 h-full rounded-full transition-all duration-500 ease-out"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
@@ -256,11 +415,64 @@ export function UploadForm({ greenhouses }: UploadFormProps) {
         </div>
       )}
 
+      {pipelineState && (
+        <div className="app-panel border app-border rounded-xl p-5">
+          <div className="mb-4">
+            <h3 className="text-sm font-semibold app-text">{t('inference.pipeline_title')}</h3>
+            <p className="text-xs app-muted mt-1">
+              {t('inference.pipeline_file')
+                .replace('{current}', String(pipelineState.fileIndex))
+                .replace('{total}', String(pipelineState.total))
+                .replace('{name}', pipelineState.fileName)}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+            {PIPELINE_STEPS.map((step) => {
+              const isCompleted = pipelineState.completed.includes(step)
+              const isActive = pipelineState.activeStep === step && pipelineState.status === 'running'
+              return (
+                <div
+                  key={step}
+                  className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
+                    isCompleted
+                      ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-300'
+                      : isActive
+                        ? 'border-amber-500/50 bg-amber-500/10 text-amber-300'
+                        : 'border-[var(--app-border)] bg-[var(--app-surface-2)] app-muted'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span>{t(PIPELINE_STEP_LABELS[step])}</span>
+                    {isCompleted ? (
+                      <CheckCircle2 className="h-4 w-4" />
+                    ) : isActive ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : null}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {pipelineState.status === 'done' && (
+            <p className="text-xs text-emerald-300 mt-3">{t('inference.step_done')}</p>
+          )}
+          {pipelineState.status === 'error' && (
+            <p className="text-xs text-rose-300 mt-3">{pipelineState.error || t('inference.pipeline_failed')}</p>
+          )}
+        </div>
+      )}
+
+      {visualData && (
+        <InferenceVisualizer data={visualData} status={visualStatus} />
+      )}
+
       {/* File Preview Grid */}
       {files.length > 0 && (
         <div>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-medium text-slate-300">
+          <div className="flex items-center justify-between mb-4 mt-6">
+            <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {t('inference.images_selected').replace('{count}', String(files.length))}
               {doneFiles.length > 0 && ` • ${t('inference.uploaded_count').replace('{count}', String(doneFiles.length))}`}
             </h3>
@@ -271,6 +483,10 @@ export function UploadForm({ greenhouses }: UploadFormProps) {
                 onClick={() => {
                   files.forEach((f) => URL.revokeObjectURL(f.preview))
                   setFiles([])
+                  setPipelineState(null)
+                  setVisualData(null)
+                  setUploadProgress({ current: 0, total: 0 })
+                  setCurrentStep('')
                 }}
                 disabled={isUploading}
               >
@@ -281,6 +497,7 @@ export function UploadForm({ greenhouses }: UploadFormProps) {
                 onClick={handleUploadAll}
                 disabled={isUploading || pendingFiles.length === 0 || !selectedGreenhouse}
                 className="gap-1.5"
+                title={!selectedGreenhouse ? t('inference.select_greenhouse') : undefined}
               >
                 {isUploading ? (
                   <>
@@ -301,7 +518,7 @@ export function UploadForm({ greenhouses }: UploadFormProps) {
             {files.map((fp, index) => (
               <div
                 key={index}
-                className="relative group aspect-square bg-slate-800 rounded-lg overflow-hidden border border-slate-700"
+                className="relative group aspect-square bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700"
               >
                 <img
                   src={fp.preview}

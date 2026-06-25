@@ -1,9 +1,62 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { Sprout } from 'lucide-react'
-import { formatDateShort } from '@/lib/date-format'
-import { OverviewTimeChart } from './components/overview-time-chart'
-import { T } from '@/i18n/t'
+import { DashboardUI, SummaryStat, GreenhouseComparisonEvent, GreenhouseNode } from './components/dashboard-ui'
+
+type GreenhouseCoordinateSource = {
+  location?: string | null
+  latitude?: number | string | null
+  longitude?: number | string | null
+  lat?: number | string | null
+  lng?: number | string | null
+}
+
+function toFiniteNumber(value: unknown): number | null {
+  if (value === null || value === undefined || value === '') {
+    return null
+  }
+
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed)) {
+    return null
+  }
+
+  return parsed
+}
+
+function parseCoordinates(source: GreenhouseCoordinateSource): { latitude: number; longitude: number } | null {
+  const directLatitude = toFiniteNumber(source.latitude ?? source.lat)
+  const directLongitude = toFiniteNumber(source.longitude ?? source.lng)
+
+  if (directLatitude !== null && directLongitude !== null) {
+    if (Math.abs(directLatitude) <= 90 && Math.abs(directLongitude) <= 180) {
+      return { latitude: directLatitude, longitude: directLongitude }
+    }
+    return null
+  }
+
+  const location = source.location
+  if (!location) {
+    return null
+  }
+
+  const parts = location.split(',').map((item) => item.trim())
+  if (parts.length !== 2) {
+    return null
+  }
+
+  const latitude = Number(parts[0])
+  const longitude = Number(parts[1])
+
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    return null
+  }
+
+  if (Math.abs(latitude) > 90 || Math.abs(longitude) > 180) {
+    return null
+  }
+
+  return { latitude, longitude }
+}
 
 export default async function DashboardPage() {
   const supabase = createClient()
@@ -14,13 +67,9 @@ export default async function DashboardPage() {
   }
 
   // Fetch real stats
-  const { data: greenhouses } = await supabase.from('greenhouses').select('id, name, code, alert_thresholds')
+  const { data: greenhouses } = await supabase.from('greenhouses').select('*')
   const { data: trapImages } = await supabase.from('trap_images').select('id, greenhouse_id, capture_timestamp')
   const { data: detections } = await supabase.from('insect_detections').select('species_name, trap_image_id')
-
-  const totalGreenhouses = greenhouses?.length || 0
-  const totalImages = trapImages?.length || 0
-  const totalDetections = detections?.length || 0
 
   // Species count breakdown
   const speciesCounts: Record<string, number> = {}
@@ -45,9 +94,48 @@ export default async function DashboardPage() {
     }
   }
 
+  const greenhouseById: Record<string, { name: string | null; code: string | null }> = {}
+  if (greenhouses) {
+    for (const greenhouse of greenhouses) {
+      greenhouseById[greenhouse.id] = {
+        name: greenhouse.name || null,
+        code: greenhouse.code || null,
+      }
+    }
+  }
+
+  const trapImageMetaById: Record<string, { greenhouseId: string; captureTimestamp: string | null }> = {}
+  if (trapImages) {
+    for (const image of trapImages) {
+      trapImageMetaById[image.id] = {
+        greenhouseId: image.greenhouse_id,
+        captureTimestamp: image.capture_timestamp || null,
+      }
+    }
+  }
+
+  const greenhouseComparisonEvents: GreenhouseComparisonEvent[] = []
+  if (detections) {
+    for (const detection of detections) {
+      const trapImageMeta = trapImageMetaById[detection.trap_image_id]
+      if (!trapImageMeta?.captureTimestamp) {
+        continue
+      }
+
+      const greenhouseMeta = greenhouseById[trapImageMeta.greenhouseId]
+
+      greenhouseComparisonEvents.push({
+        greenhouseId: trapImageMeta.greenhouseId,
+        greenhouseName: greenhouseMeta?.name || greenhouseMeta?.code || 'Unknown Greenhouse',
+        greenhouseCode: greenhouseMeta?.code || '',
+        capturedAt: trapImageMeta.captureTimestamp,
+        speciesName: detection.species_name,
+      })
+    }
+  }
+
   // Check for alert violations
-  let alertCount = 0
-  const greenhouseRisks: { id: string; name: string; code: string; detections: number; riskLevel: 'safe' | 'warning' | 'danger' }[] = []
+  const greenhouseRisks: GreenhouseNode[] = []
 
   if (greenhouses) {
     for (const gh of greenhouses) {
@@ -57,7 +145,6 @@ export default async function DashboardPage() {
 
       for (const [species, limit] of Object.entries(thresholds) as [string, number][]) {
         if ((speciesCounts[species] || 0) > limit) {
-          alertCount++
           hasAlert = true
         }
       }
@@ -69,116 +156,38 @@ export default async function DashboardPage() {
         riskLevel = 'warning'
       }
 
-      greenhouseRisks.push({ id: gh.id, name: gh.name, code: gh.code, detections: totalDet, riskLevel })
+      const coordinates = parseCoordinates(gh)
+
+      greenhouseRisks.push({
+        id: gh.id,
+        name: gh.name,
+        code: gh.code,
+        detections: totalDet,
+        riskLevel,
+        latitude: coordinates?.latitude ?? null,
+        longitude: coordinates?.longitude ?? null,
+      })
     }
   }
-
-  const stats = [
-    { nameKey: 'overview.total_greenhouses', value: String(totalGreenhouses), color: 'text-white' },
-    { nameKey: 'overview.images_processed', value: String(totalImages), color: 'text-white' },
-    { nameKey: 'overview.insects_detected', value: String(totalDetections), color: 'text-emerald-400' },
-    { nameKey: 'overview.critical_alerts', value: String(alertCount), color: alertCount > 0 ? 'text-red-400' : 'text-white' },
-  ]
 
   const topSpecies = Object.entries(speciesCounts)
     .sort((a, b) => b[1] - a[1])
-    .slice(0, 6)
 
-  // Build time-series data: detections per date (grouped by capture date)
-  const dateDetectionMap: Record<string, number> = {}
-  if (trapImages && detections) {
-    const imageIdToDate: Record<string, string> = {}
-    for (const img of trapImages) {
-      imageIdToDate[img.id] = formatDateShort(img.capture_timestamp)
-    }
-    for (const det of detections) {
-      const date = imageIdToDate[det.trap_image_id]
-      if (date) {
-        dateDetectionMap[date] = (dateDetectionMap[date] || 0) + 1
-      }
-    }
-  }
-  const timeSeriesData = Object.entries(dateDetectionMap)
-    .sort((a, b) => {
-      const [dA, mA, yA] = a[0].split('/').map(Number)
-      const [dB, mB, yB] = b[0].split('/').map(Number)
-      return new Date(yA, mA - 1, dA).getTime() - new Date(yB, mB - 1, dB).getTime()
-    })
-    .map(([date, count]) => ({ date, detections: count }))
-
-  const riskColors = {
-    safe: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', text: 'text-emerald-400', dot: 'bg-emerald-400', labelKey: 'overview.safe' },
-    warning: { bg: 'bg-amber-500/10', border: 'border-amber-500/30', text: 'text-amber-400', dot: 'bg-amber-400', labelKey: 'overview.warning' },
-    danger: { bg: 'bg-red-500/10', border: 'border-red-500/30', text: 'text-red-400', dot: 'bg-red-400', labelKey: 'overview.alert' },
-  }
+  // Build Summary Stats out of top 4 species
+  const cardColors = ['border-emerald-500', 'border-blue-500', 'border-rose-500', 'border-amber-500']
+  const summaryStats: SummaryStat[] = topSpecies.slice(0, 4).map(([species, count], idx) => ({
+    label: species.slice(0, 2).toUpperCase(),
+    name: species,
+    count: count,
+    trend: '+0%', // This would ideally compare against past data in real implementation
+    color: cardColors[idx % cardColors.length]
+  }))
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <T tKey="overview.title" as="h1" className="text-3xl font-bold tracking-tight text-white" />
-        <T tKey="overview.welcome" as="p" className="text-slate-400 mt-1" />
-      </div>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat) => (
-          <div key={stat.nameKey} className="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-sm">
-            <T tKey={stat.nameKey} as="h3" className="text-sm font-medium text-slate-400" />
-            <p className={`text-3xl font-bold mt-2 ${stat.color}`}>{stat.value}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Greenhouse Risk Overview */}
-      {greenhouseRisks.length > 0 && (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
-          <T tKey="overview.greenhouse_status" as="h2" className="text-lg font-semibold text-white mb-4" />
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-            {greenhouseRisks.map((gh) => {
-              const colors = riskColors[gh.riskLevel]
-              return (
-                <div
-                  key={gh.id}
-                  className={`${colors.bg} border ${colors.border} rounded-xl p-4 select-none`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className={`text-xs font-bold ${colors.text} uppercase tracking-wide`}>{gh.code}</span>
-                    <div className="flex items-center gap-1.5">
-                      <span className={`w-2 h-2 rounded-full ${colors.dot} animate-pulse`} />
-                      <T tKey={colors.labelKey} as="span" className={`text-xs font-medium ${colors.text}`} />
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <Sprout className={`h-4 w-4 ${colors.text} opacity-60`} />
-                    <p className="text-sm font-medium text-white truncate">{gh.name}</p>
-                  </div>
-                  <p className="text-xs text-slate-400 mt-1">
-                    {gh.detections} detection{gh.detections !== 1 ? 's' : ''}
-                  </p>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Species Breakdown */}
-      {topSpecies.length > 0 && (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
-          <T tKey="overview.species_breakdown" as="h2" className="text-lg font-semibold text-white mb-4" />
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            {topSpecies.map(([species, count]) => (
-              <div key={species} className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 text-center">
-                <p className="text-2xl font-bold text-emerald-400">{count}</p>
-                <p className="text-xs text-slate-400 mt-1 truncate" title={species}>{species}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Time-Series Chart */}
-      <OverviewTimeChart data={timeSeriesData} />
-    </div>
+    <DashboardUI
+      summaryStats={summaryStats}
+      greenhouseComparisonEvents={greenhouseComparisonEvents}
+      greenhouses={greenhouseRisks}
+    />
   )
 }

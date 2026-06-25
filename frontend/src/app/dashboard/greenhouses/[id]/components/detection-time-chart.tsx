@@ -45,14 +45,17 @@ export function DetectionTimeChart({ data }: DetectionTimeChartProps) {
     ctx.scale(dpr, dpr)
     ctx.clearRect(0, 0, W, H)
 
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || 
+                   (document.documentElement.getAttribute('data-theme') === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+                   
     // Title
-    ctx.fillStyle = '#e2e8f0'
+    ctx.fillStyle = isDark ? '#e2e8f0' : '#1e293b'
     ctx.font = 'bold 13px Inter, system-ui, sans-serif'
     ctx.textAlign = 'left'
     ctx.fillText(t('chart.total_detections_time'), 16, 22)
 
     if (data.length === 0) {
-      ctx.fillStyle = '#64748b'
+      ctx.fillStyle = isDark ? '#64748b' : '#94a3b8'
       ctx.font = '14px Inter, system-ui, sans-serif'
       ctx.textAlign = 'center'
       ctx.fillText(t('chart.no_data'), W / 2, H / 2)
@@ -68,7 +71,7 @@ export function DetectionTimeChart({ data }: DetectionTimeChartProps) {
     const yMax = yStep * 5
 
     // Grid
-    ctx.strokeStyle = '#1e293b'
+    ctx.strokeStyle = isDark ? '#1e293b' : '#e2e8f0'
     ctx.lineWidth = 1
     for (let i = 0; i <= 5; i++) {
       const y = padding.top + chartH - (i / 5) * chartH
@@ -76,7 +79,7 @@ export function DetectionTimeChart({ data }: DetectionTimeChartProps) {
       ctx.moveTo(padding.left, y)
       ctx.lineTo(W - padding.right, y)
       ctx.stroke()
-      ctx.fillStyle = '#64748b'
+      ctx.fillStyle = isDark ? '#64748b' : '#64748b'
       ctx.font = '11px Inter, system-ui, sans-serif'
       ctx.textAlign = 'right'
       ctx.fillText(String(Math.round(yMax * (i / 5))), padding.left - 8, y + 4)
@@ -126,14 +129,14 @@ export function DetectionTimeChart({ data }: DetectionTimeChartProps) {
 
       ctx.beginPath()
       ctx.arc(x, y, isHovered ? 6 : 4, 0, Math.PI * 2)
-      ctx.fillStyle = isHovered ? '#34d399' : '#10b981'
+      ctx.fillStyle = isHovered ? (isDark ? '#34d399' : '#059669') : (isDark ? '#10b981' : '#10b981')
       ctx.fill()
-      ctx.strokeStyle = '#0f172a'
+      ctx.strokeStyle = isDark ? '#0f172a' : '#ffffff'
       ctx.lineWidth = 2
       ctx.stroke()
 
       // X label
-      ctx.fillStyle = '#64748b'
+      ctx.fillStyle = isDark ? '#64748b' : '#64748b'
       ctx.font = '10px Inter, system-ui, sans-serif'
       ctx.textAlign = 'center'
       ctx.save()
@@ -178,7 +181,7 @@ export function DetectionTimeChart({ data }: DetectionTimeChartProps) {
   }
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 relative">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 relative shadow-sm">
       <div ref={containerRef} className="relative">
         <canvas
           ref={canvasRef}
@@ -188,15 +191,15 @@ export function DetectionTimeChart({ data }: DetectionTimeChartProps) {
         />
         {tooltip && (
           <div
-            className="absolute z-10 pointer-events-none bg-slate-800 border border-slate-600 rounded-lg shadow-xl px-3 py-2 text-xs"
+            className="absolute z-10 pointer-events-none bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg shadow-xl px-3 py-2 text-xs"
             style={{
               left: Math.min(tooltip.x, (containerRef.current?.clientWidth || 300) - 160),
               top: tooltip.y - 70,
             }}
           >
-            <p className="text-white font-semibold">{tooltip.name}</p>
-            <p className="text-slate-400">{tooltip.date}</p>
-            <p className="text-emerald-400 font-bold mt-0.5">
+            <p className="text-slate-900 dark:text-white font-semibold">{tooltip.name}</p>
+            <p className="text-slate-500 dark:text-slate-400">{tooltip.date}</p>
+            <p className="text-emerald-600 dark:text-emerald-400 font-bold mt-0.5">
               {tooltip.detections} {t('overview.detections')}
             </p>
           </div>

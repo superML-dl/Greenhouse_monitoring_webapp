@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     slice_height: int = 640
     slice_width: int = 640
     overlap_ratio: float = 0.2
+    debug_slicing: bool = False
 
     # DBSCAN clustering
     dbscan_eps: float = 30.0

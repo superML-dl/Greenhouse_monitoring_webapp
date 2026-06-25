@@ -87,14 +87,14 @@ export function GreenhouseForm({ greenhouse, onSubmit, onClose }: GreenhouseForm
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 sticky top-0 bg-slate-900 z-10">
-          <h2 className="text-lg font-semibold text-white">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 sticky top-0 bg-white dark:bg-slate-900 z-10">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
             {isEditing ? t('greenhouse.edit') : t('greenhouse.create')}
           </h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -109,29 +109,29 @@ export function GreenhouseForm({ greenhouse, onSubmit, onClose }: GreenhouseForm
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label htmlFor="name" className="text-sm font-medium text-slate-300">{t('greenhouse.name')} *</label>
+              <label htmlFor="name" className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('greenhouse.name')} *</label>
               <input
                 id="name" name="name" type="text" required
                 defaultValue={greenhouse?.name || ''}
                 placeholder={t('greenhouse.name_placeholder')}
-                className="w-full bg-slate-950 border border-slate-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
               />
             </div>
             <div className="space-y-1.5">
-              <label htmlFor="code" className="text-sm font-medium text-slate-300">{t('greenhouse.code')} *</label>
+              <label htmlFor="code" className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('greenhouse.code')} *</label>
               <input
                 id="code" name="code" type="text" required
                 defaultValue={greenhouse?.code || ''}
                 placeholder={t('greenhouse.code_placeholder')}
-                className="w-full bg-slate-950 border border-slate-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
               />
             </div>
           </div>
 
           {/* Location with Map */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300 flex items-center gap-1.5">
-              <MapPin className="h-4 w-4 text-emerald-400" />
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <MapPin className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
               {t('greenhouse.location')}
             </label>
             <div className="flex gap-2">
@@ -140,7 +140,7 @@ export function GreenhouseForm({ greenhouse, onSubmit, onClose }: GreenhouseForm
                 value={locationText}
                 onChange={(e) => setLocationText(e.target.value)}
                 placeholder={t('greenhouse.location_placeholder')}
-                className="flex-1 bg-slate-950 border border-slate-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+                className="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
               />
               <Button
                 type="button"
@@ -157,7 +157,7 @@ export function GreenhouseForm({ greenhouse, onSubmit, onClose }: GreenhouseForm
 
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
-                <label className="text-xs text-slate-500">{t('greenhouse.latitude')}</label>
+                <label className="text-xs text-slate-500 dark:text-slate-400">{t('greenhouse.latitude')}</label>
                 <input
                   type="text"
                   value={latitude}
@@ -166,11 +166,11 @@ export function GreenhouseForm({ greenhouse, onSubmit, onClose }: GreenhouseForm
                     if (e.target.value && longitude) setLocationText(`${e.target.value}, ${longitude}`)
                   }}
                   placeholder={t('greenhouse.latitude_placeholder')}
-                  className="w-full bg-slate-950 border border-slate-700 text-white px-3 py-1.5 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white px-3 py-1.5 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-xs text-slate-500">{t('greenhouse.longitude')}</label>
+                <label className="text-xs text-slate-500 dark:text-slate-400">{t('greenhouse.longitude')}</label>
                 <input
                   type="text"
                   value={longitude}
@@ -179,7 +179,7 @@ export function GreenhouseForm({ greenhouse, onSubmit, onClose }: GreenhouseForm
                     if (latitude && e.target.value) setLocationText(`${latitude}, ${e.target.value}`)
                   }}
                   placeholder={t('greenhouse.longitude_placeholder')}
-                  className="w-full bg-slate-950 border border-slate-700 text-white px-3 py-1.5 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white px-3 py-1.5 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
                 />
               </div>
             </div>
@@ -201,32 +201,32 @@ export function GreenhouseForm({ greenhouse, onSubmit, onClose }: GreenhouseForm
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label htmlFor="cropType" className="text-sm font-medium text-slate-300">{t('greenhouse.crop_type')}</label>
+              <label htmlFor="cropType" className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('greenhouse.crop_type')}</label>
               <input
                 id="cropType" name="cropType" type="text"
                 defaultValue={greenhouse?.crop_type || ''}
                 placeholder={t('greenhouse.crop_type_placeholder')}
-                className="w-full bg-slate-950 border border-slate-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
               />
             </div>
             <div className="space-y-1.5">
-              <label htmlFor="areaSqm" className="text-sm font-medium text-slate-300">{t('greenhouse.area')} (m²)</label>
+              <label htmlFor="areaSqm" className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('greenhouse.area')} (m²)</label>
               <input
                 id="areaSqm" name="areaSqm" type="number" step="0.1"
                 defaultValue={greenhouse?.area_sqm ?? ''}
                 placeholder={t('greenhouse.area_placeholder')}
-                className="w-full bg-slate-950 border border-slate-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
               />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="description" className="text-sm font-medium text-slate-300">{t('greenhouse.description')}</label>
+            <label htmlFor="description" className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('greenhouse.description')}</label>
             <textarea
               id="description" name="description" rows={3}
               defaultValue={greenhouse?.description || ''}
               placeholder={t('greenhouse.description_placeholder')}
-              className="w-full bg-slate-950 border border-slate-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all resize-none"
+              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all resize-none"
             />
           </div>
 

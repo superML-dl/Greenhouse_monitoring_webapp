@@ -189,12 +189,12 @@ export function ImageViewer({ image, onClose }: ImageViewerProps) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex">
+    <div className="fixed inset-0 bg-white/90 dark:bg-black/80 backdrop-blur-sm z-50 flex">
       {/* Main canvas area */}
       <div className="flex-1 flex flex-col">
         {/* Top bar */}
-        <div className="h-14 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between px-4">
-          <h3 className="text-sm font-medium text-white truncate max-w-[400px]">{image.name}</h3>
+        <div className="h-14 bg-white/90 dark:bg-slate-900/90 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4">
+          <h3 className="text-sm font-medium text-slate-900 dark:text-white truncate max-w-[400px]">{image.name}</h3>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => setZoom((z) => Math.min(5, z + 0.25))} title={t('inference.zoom_in')}>
               <ZoomIn className="h-4 w-4" />
@@ -206,9 +206,9 @@ export function ImageViewer({ image, onClose }: ImageViewerProps) {
             <Button variant="ghost" size="sm" onClick={resetView} title={t('inference.reset_view')}>
               <RotateCcw className="h-4 w-4" />
             </Button>
-            <div className="w-px h-6 bg-slate-700 mx-1" />
+            <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1" />
             <Button
-              variant={showBboxes ? 'default' : 'ghost'}
+              variant={showBboxes ? 'default' : 'outline'}
               size="sm"
               onClick={() => setShowBboxes(!showBboxes)}
               className="gap-1.5"
@@ -216,8 +216,8 @@ export function ImageViewer({ image, onClose }: ImageViewerProps) {
               {showBboxes ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
               {t('inference.bbox')}
             </Button>
-            <div className="w-px h-6 bg-slate-700 mx-1" />
-            <button onClick={onClose} className="p-1.5 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
+            <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1" />
+            <button onClick={onClose} className="p-1.5 rounded-md text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 transition-colors">
               <X className="h-5 w-5" />
             </button>
           </div>
@@ -226,7 +226,7 @@ export function ImageViewer({ image, onClose }: ImageViewerProps) {
         {/* Canvas */}
         <div
           ref={containerRef}
-          className="flex-1 overflow-hidden cursor-grab active:cursor-grabbing bg-slate-950"
+          className="flex-1 overflow-hidden cursor-grab active:cursor-grabbing bg-slate-50 dark:bg-slate-950"
           onWheel={handleWheel}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
@@ -238,45 +238,45 @@ export function ImageViewer({ image, onClose }: ImageViewerProps) {
       </div>
 
       {/* Right sidebar - Details panel */}
-      <div className="w-80 bg-slate-900 border-l border-slate-800 flex flex-col overflow-y-auto">
+      <div className="w-80 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 flex flex-col overflow-y-auto shadow-xl">
         {/* Image Info */}
-        <div className="p-4 border-b border-slate-800">
-          <h4 className="text-sm font-semibold text-white mb-3">{t('inference.details')}</h4>
+        <div className="p-4 border-b border-slate-200 dark:border-slate-800">
+          <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">{t('inference.details')}</h4>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-slate-400">{t('inference.greenhouse')}</span>
-              <span className="text-white">{image.greenhouses ? `${image.greenhouses.name}` : '—'}</span>
+              <span className="text-slate-500 dark:text-slate-400">{t('inference.greenhouse')}</span>
+              <span className="text-slate-900 dark:text-white">{image.greenhouses ? `${image.greenhouses.name}` : '—'}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400">{t('inference.captured')}</span>
-              <span className="text-white">{formatDate(image.capture_timestamp)}</span>
+              <span className="text-slate-500 dark:text-slate-400">{t('inference.captured')}</span>
+              <span className="text-slate-900 dark:text-white">{formatDate(image.capture_timestamp)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400">{t('inference.status')}</span>
-              <span className={`font-medium ${image.status === 'processed' ? 'text-emerald-400' : 'text-yellow-400'}`}>
+              <span className="text-slate-500 dark:text-slate-400">{t('inference.status')}</span>
+              <span className={`font-medium ${image.status === 'processed' ? 'text-emerald-600 dark:text-emerald-400' : 'text-yellow-600 dark:text-yellow-400'}`}>
                 {t(`inference.status_${image.status}`)}
               </span>
             </div>
             {image.temperature && (
               <div className="flex justify-between items-center">
-                <span className="text-slate-400 flex items-center gap-1"><Thermometer className="h-3 w-3" /> {t('inference.temperature')}</span>
-                <span className="text-white">{image.temperature}°C</span>
+                <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1"><Thermometer className="h-3 w-3" /> {t('inference.temperature')}</span>
+                <span className="text-slate-900 dark:text-white">{image.temperature}°C</span>
               </div>
             )}
             {image.humidity && (
               <div className="flex justify-between items-center">
-                <span className="text-slate-400 flex items-center gap-1"><Droplets className="h-3 w-3" /> {t('inference.humidity')}</span>
-                <span className="text-white">{image.humidity}%</span>
+                <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1"><Droplets className="h-3 w-3" /> {t('inference.humidity')}</span>
+                <span className="text-slate-900 dark:text-white">{image.humidity}%</span>
               </div>
             )}
           </div>
         </div>
 
         {/* Confidence Slider */}
-        <div className="p-4 border-b border-slate-800">
+        <div className="p-4 border-b border-slate-200 dark:border-slate-800">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-semibold text-white">{t('inference.confidence_threshold')}</span>
-            <span className="text-xs font-mono text-emerald-400">{Math.round(confidenceThreshold * 100)}%</span>
+            <span className="text-sm font-semibold text-slate-900 dark:text-white">{t('inference.confidence_threshold')}</span>
+            <span className="text-xs font-mono text-emerald-600 dark:text-emerald-400">{Math.round(confidenceThreshold * 100)}%</span>
           </div>
           <input
             type="range"
@@ -294,8 +294,8 @@ export function ImageViewer({ image, onClose }: ImageViewerProps) {
         </div>
 
         {/* Detection Summary */}
-        <div className="p-4 border-b border-slate-800">
-          <h4 className="text-sm font-semibold text-white mb-3">
+        <div className="p-4 border-b border-slate-200 dark:border-slate-800">
+          <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">
             {t('overview.detections')} ({filteredDetections.length})
           </h4>
           {loading ? (
@@ -311,9 +311,9 @@ export function ImageViewer({ image, onClose }: ImageViewerProps) {
                       className="w-3 h-3 rounded-full"
                       style={{ backgroundColor: getSpeciesColor(species) }}
                     />
-                    <span className="text-sm text-slate-300">{species}</span>
+                    <span className="text-sm text-slate-700 dark:text-slate-300">{species}</span>
                   </div>
-                  <span className="text-sm font-bold text-white">{count}</span>
+                  <span className="text-sm font-bold text-slate-900 dark:text-white">{count}</span>
                 </div>
               ))}
             </div>
@@ -323,16 +323,16 @@ export function ImageViewer({ image, onClose }: ImageViewerProps) {
         {/* Individual detections list */}
         {!loading && filteredDetections.length > 0 && (
           <div className="p-4 flex-1 overflow-y-auto">
-            <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">{t('inference.all_detections')}</h4>
+            <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">{t('inference.all_detections')}</h4>
             <div className="space-y-1.5">
               {filteredDetections.map((det, i) => (
-                <div key={det.id || i} className="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-800/50 text-xs">
+                <div key={det.id || i} className="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800/50 text-xs">
                   <div className="flex items-center gap-2">
                     <div
                       className="w-2 h-2 rounded-full flex-shrink-0"
                       style={{ backgroundColor: getSpeciesColor(det.species_name) }}
                     />
-                    <span className="text-slate-300">{det.species_name}</span>
+                    <span className="text-slate-700 dark:text-slate-300">{det.species_name}</span>
                   </div>
                   <span className="text-slate-500 font-mono">{(det.confidence * 100).toFixed(1)}%</span>
                 </div>

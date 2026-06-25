@@ -121,7 +121,7 @@ export default async function GreenhouseDetailPage({
       <div>
         <Link
           href="/dashboard/greenhouses"
-          className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-emerald-400 mb-4 transition-colors"
+          className="inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 mb-4 transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           <T tKey="greenhouse.back" />
@@ -129,13 +129,13 @@ export default async function GreenhouseDetailPage({
         <div className="flex items-start justify-between">
           <div>
             <div className="flex items-center gap-3 mb-1">
-              <h1 className="text-2xl font-bold text-white">{greenhouse.name}</h1>
-              <span className="px-2 py-0.5 text-xs font-medium bg-emerald-500/10 text-emerald-400 rounded-md border border-emerald-500/20">
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{greenhouse.name}</h1>
+              <span className="px-2 py-0.5 text-xs font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-md border border-emerald-500/20">
                 {greenhouse.code}
               </span>
             </div>
             {greenhouse.description && (
-              <p className="text-slate-400 text-sm mt-1">{greenhouse.description}</p>
+              <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">{greenhouse.description}</p>
             )}
           </div>
           <ExportButton greenhouseId={params.id} />
@@ -143,22 +143,22 @@ export default async function GreenhouseDetailPage({
       </div>
 
       {/* Meta Info Row */}
-      <div className="flex flex-wrap gap-6 text-sm text-slate-400">
+      <div className="flex flex-wrap gap-6 text-sm text-slate-500 dark:text-slate-400">
         {greenhouse.location && (
           <div className="flex items-center gap-1.5">
-            <MapPin className="h-4 w-4 text-slate-500" />
+            <MapPin className="h-4 w-4 text-slate-400 dark:text-slate-500" />
             {greenhouse.location}
           </div>
         )}
         {greenhouse.crop_type && (
           <div className="flex items-center gap-1.5">
-            <Leaf className="h-4 w-4 text-slate-500" />
+            <Leaf className="h-4 w-4 text-slate-400 dark:text-slate-500" />
             {greenhouse.crop_type}
           </div>
         )}
         {greenhouse.area_sqm && (
           <div className="flex items-center gap-1.5">
-            <Ruler className="h-4 w-4 text-slate-500" />
+            <Ruler className="h-4 w-4 text-slate-400 dark:text-slate-500" />
             {greenhouse.area_sqm} m²
           </div>
         )}
@@ -166,13 +166,13 @@ export default async function GreenhouseDetailPage({
 
       {/* Stats Widgets — Only Total Images + Total Detections */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-          <T tKey="greenhouse.total_images" as="h3" className="text-sm font-medium text-slate-400" />
-          <p className="text-3xl font-bold text-white mt-1">{totalImages}</p>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm">
+          <T tKey="greenhouse.total_images" as="h3" className="text-sm font-medium text-slate-500 dark:text-slate-400" />
+          <p className="text-3xl font-bold text-slate-900 dark:text-white mt-1">{totalImages}</p>
         </div>
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-          <T tKey="greenhouse.total_detections" as="h3" className="text-sm font-medium text-slate-400" />
-          <p className="text-3xl font-bold text-white mt-1">{totalDetections}</p>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm">
+          <T tKey="greenhouse.total_detections" as="h3" className="text-sm font-medium text-slate-500 dark:text-slate-400" />
+          <p className="text-3xl font-bold text-slate-900 dark:text-white mt-1">{totalDetections}</p>
         </div>
       </div>
 
@@ -193,12 +193,12 @@ export default async function GreenhouseDetailPage({
 
       {/* Trap Images with Viewer */}
       <div>
-        <T tKey="greenhouse.trap_images" as="h2" className="text-lg font-semibold text-white mb-4" />
+        <T tKey="greenhouse.trap_images" as="h2" className="text-lg font-semibold text-slate-900 dark:text-white mb-4" />
         {totalImages === 0 ? (
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-10 text-center">
-            <CalendarDays className="h-10 w-10 text-slate-600 mx-auto mb-3" />
-            <T tKey="greenhouse.no_images" as="p" className="text-slate-400" />
-            <T tKey="greenhouse.go_inference" as="p" className="text-slate-500 text-sm mt-1" />
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-10 text-center shadow-sm">
+            <CalendarDays className="h-10 w-10 text-slate-400 dark:text-slate-600 mx-auto mb-3" />
+            <T tKey="greenhouse.no_images" as="p" className="text-slate-500 dark:text-slate-400" />
+            <T tKey="greenhouse.go_inference" as="p" className="text-slate-400 dark:text-slate-500 text-sm mt-1" />
           </div>
         ) : (
           <GreenhouseImageGrid images={trapImages || []} />

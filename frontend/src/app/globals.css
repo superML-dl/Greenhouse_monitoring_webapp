@@ -3,18 +3,102 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #020817;
+  --background: #020817;
+  --foreground: #f8fafc;
+  --app-bg: #020817;
+  --app-surface: #0f172a;
+  --app-surface-2: #111827;
+  --app-border: #1e293b;
+  --app-text: #f8fafc;
+  --app-muted: #94a3b8;
+  --app-hover: #1e293b;
+  --app-nav-active: #1e293b;
+  --app-nav-active-text: #f8fafc;
+  --app-input-bg: #020817;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #020817;
-    --foreground: #f8fafc;
-  }
+html[data-theme='light'] {
+  --background: #f1f5f9;
+  --foreground: #0f172a;
+  --app-bg: #f1f5f9;
+  --app-surface: #ffffff;
+  --app-surface-2: #f8fafc;
+  --app-border: #cbd5e1;
+  --app-text: #0f172a;
+  --app-muted: #475569;
+  --app-hover: #e2e8f0;
+  --app-nav-active: #dbeafe;
+  --app-nav-active-text: #0f172a;
+  --app-input-bg: #ffffff;
+}
+
+html[data-theme='dark'] {
+  --background: #020817;
+  --foreground: #f8fafc;
+  --app-bg: #020817;
+  --app-surface: #0f172a;
+  --app-surface-2: #111827;
+  --app-border: #1e293b;
+  --app-text: #f8fafc;
+  --app-muted: #94a3b8;
+  --app-hover: #1e293b;
+  --app-nav-active: #1e293b;
+  --app-nav-active-text: #f8fafc;
+  --app-input-bg: #020817;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+@layer components {
+  .app-shell-bg {
+    background-color: var(--app-bg);
+    color: var(--app-text);
+  }
+
+  .app-panel {
+    background-color: var(--app-surface);
+    border-color: var(--app-border);
+  }
+
+  .app-panel-2 {
+    background-color: var(--app-surface-2);
+    border-color: var(--app-border);
+  }
+
+  .app-border {
+    border-color: var(--app-border);
+  }
+
+  .app-text {
+    color: var(--app-text);
+  }
+
+  .app-muted {
+    color: var(--app-muted);
+  }
+
+  .app-input {
+    background-color: var(--app-input-bg);
+    border-color: var(--app-border);
+    color: var(--app-text);
+  }
+}
+
+@keyframes routeContentIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.route-content-enter {
+  animation: routeContentIn 220ms ease-out;
 }

@@ -28,13 +28,13 @@ export function GreenhouseImageGrid({ images }: GreenhouseImageGridProps) {
           <button
             key={img.id}
             onClick={() => setViewingImage(img)}
-            className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden hover:border-emerald-500/50 hover:shadow-lg hover:shadow-emerald-500/5 transition-all text-left group"
+            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden hover:border-emerald-500/50 hover:shadow-lg hover:shadow-emerald-500/5 transition-all text-left group"
           >
-            <div className="h-40 bg-slate-800 flex items-center justify-center relative overflow-hidden">
+            <div className="h-40 bg-slate-100 dark:bg-slate-800 flex items-center justify-center relative overflow-hidden">
               {img.image_url ? (
                 <img src={img.image_url} alt={img.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
               ) : (
-                <span className="text-slate-500 text-sm">{t('inference.no_uploads')}</span>
+                <span className="text-slate-400 dark:text-slate-500 text-sm">{t('inference.no_uploads')}</span>
               )}
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
                 <span className="text-white text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 px-3 py-1.5 rounded-full">
@@ -43,10 +43,10 @@ export function GreenhouseImageGrid({ images }: GreenhouseImageGridProps) {
               </div>
             </div>
             <div className="p-4">
-              <h4 className="text-sm font-medium text-white truncate">{img.name || t('inference.untitled')}</h4>
-              <div className="flex justify-between mt-2 text-xs text-slate-400">
+              <h4 className="text-sm font-medium text-slate-900 dark:text-white truncate">{img.name || t('inference.untitled')}</h4>
+              <div className="flex justify-between mt-2 text-xs text-slate-500 dark:text-slate-400">
                 <span>{formatDateShort(img.capture_timestamp)}</span>
-                <span className={`font-medium ${(img.insect_detections?.[0]?.count || 0) > 0 ? 'text-emerald-400' : 'text-slate-500'}`}>
+                <span className={`font-medium ${(img.insect_detections?.[0]?.count || 0) > 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'}`}>
                   {img.insect_detections?.[0]?.count || 0} {t('overview.detections')}
                 </span>
               </div>
@@ -64,14 +64,14 @@ export function GreenhouseImageGrid({ images }: GreenhouseImageGridProps) {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-4">
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             {t('inference.showing')} {start + 1}–{Math.min(start + PER_PAGE, images.length)} {t('inference.of')} {images.length} {t('inference.images')}
           </p>
           <div className="flex items-center gap-1">
             <button
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page <= 1}
-              className={`p-1.5 rounded-md transition-colors ${page > 1 ? 'text-slate-300 hover:bg-slate-800 hover:text-white' : 'text-slate-600 cursor-not-allowed'}`}
+              className={`p-1.5 rounded-md transition-colors ${page > 1 ? 'text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white' : 'text-slate-300 dark:text-slate-600 cursor-not-allowed'}`}
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
@@ -80,8 +80,8 @@ export function GreenhouseImageGrid({ images }: GreenhouseImageGridProps) {
                 key={p}
                 onClick={() => setPage(p)}
                 className={`min-w-[32px] h-8 flex items-center justify-center rounded-md text-xs font-medium transition-colors ${p === page
-                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                    ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white'
                   }`}
               >
                 {p}
@@ -90,7 +90,7 @@ export function GreenhouseImageGrid({ images }: GreenhouseImageGridProps) {
             <button
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages}
-              className={`p-1.5 rounded-md transition-colors ${page < totalPages ? 'text-slate-300 hover:bg-slate-800 hover:text-white' : 'text-slate-600 cursor-not-allowed'}`}
+              className={`p-1.5 rounded-md transition-colors ${page < totalPages ? 'text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white' : 'text-slate-300 dark:text-slate-600 cursor-not-allowed'}`}
             >
               <ChevronRight className="h-4 w-4" />
             </button>

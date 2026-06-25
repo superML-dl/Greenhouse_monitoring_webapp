@@ -66,10 +66,10 @@ export function PestBreakdown({ data, greenhouseId, thresholds }: PestBreakdownP
   }
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-          <Bug className="h-5 w-5 text-emerald-400" />
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+          <Bug className="h-5 w-5 text-emerald-500 dark:text-emerald-400" />
           {t('greenhouse.pest_breakdown')}
         </h2>
         <div className="flex items-center gap-3">
@@ -101,13 +101,13 @@ export function PestBreakdown({ data, greenhouseId, thresholds }: PestBreakdownP
             <div
               key={pest.species}
               className={`rounded-lg p-4 border transition-colors ${isOverThreshold
-                  ? 'bg-red-500/10 border-red-500/30'
-                  : 'bg-slate-800/50 border-slate-700'
+                  ? 'bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/30'
+                  : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'
                 }`}
             >
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
-                <span className="text-sm font-medium text-white truncate">{pest.species}</span>
+                <span className="text-sm font-medium text-slate-900 dark:text-white truncate">{pest.species}</span>
                 {isOverThreshold && (
                   <AlertTriangle className="h-3.5 w-3.5 text-red-400 flex-shrink-0 ml-auto" />
                 )}
@@ -119,7 +119,7 @@ export function PestBreakdown({ data, greenhouseId, thresholds }: PestBreakdownP
 
               {/* Progress bar */}
               <div className="mt-2">
-                <div className="w-full bg-slate-700 rounded-full h-1.5">
+                <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5">
                   <div
                     className="h-full rounded-full transition-all"
                     style={{
@@ -132,17 +132,17 @@ export function PestBreakdown({ data, greenhouseId, thresholds }: PestBreakdownP
               </div>
 
               {/* Threshold input */}
-              <div className="mt-3 pt-3 border-t border-slate-700/50">
-                <label className="text-xs text-slate-400 block mb-1">{t('greenhouse.alert_threshold')}</label>
+              <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700/50">
+                <label className="text-xs text-slate-500 dark:text-slate-400 block mb-1">{t('greenhouse.alert_threshold')}</label>
                 <input
                   type="number"
                   min="0"
                   placeholder={t('greenhouse.set_limit')}
                   value={localThresholds[pest.species] || ''}
                   onChange={(e) => handleThresholdChange(pest.species, e.target.value)}
-                  className={`w-full bg-slate-950 border text-sm px-2.5 py-1.5 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ${isOverThreshold
-                      ? 'border-red-500/50 text-red-300'
-                      : 'border-slate-600 text-white'
+                  className={`w-full bg-white dark:bg-slate-950 border text-sm px-2.5 py-1.5 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ${isOverThreshold
+                      ? 'border-red-300 dark:border-red-500/50 text-red-600 dark:text-red-300'
+                      : 'border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white'
                     }`}
                 />
                 {isOverThreshold && (
