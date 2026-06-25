@@ -38,7 +38,6 @@ class CVPipeline:
         self.dbscan_min_samples = settings.dbscan_min_samples
         self.debug_slicing = bool(settings.debug_slicing)
         self._stage1_annotation_store: dict | None = None
-        self._supabase: Client | None = self._init_supabase_client()
 
     def _init_supabase_client(self) -> Client | None:
         settings = get_settings()
@@ -132,11 +131,12 @@ class CVPipeline:
         image_width: int,
         image_height: int,
     ) -> bool:
-        if self._supabase is None:
+        supabase = self._init_supabase_client()
+        if supabase is None:
             return False
 
         try:
-            self._supabase.table("full_inference_bboxes").delete().eq("trap_image_id", trap_image_id).execute()
+            supabase.table("full_inference_bboxes").delete().eq("trap_image_id", trap_image_id).execute()
 
             rows = []
             for ann in annotations:
@@ -161,7 +161,7 @@ class CVPipeline:
                 })
 
             if rows:
-                self._supabase.table("full_inference_bboxes").insert(rows).execute()
+                supabase.table("full_inference_bboxes").insert(rows).execute()
 
             return True
         except Exception as exc:
@@ -174,12 +174,13 @@ class CVPipeline:
         image_width: int,
         image_height: int,
     ) -> list[dict]:
-        if self._supabase is None:
+        supabase = self._init_supabase_client()
+        if supabase is None:
             return []
 
         try:
             response = (
-                self._supabase
+                supabase
                 .table("full_inference_bboxes")
                 .select("bbox_x, bbox_y, bbox_w, bbox_h, class_name, confidence, source_image_width, source_image_height")
                 .eq("trap_image_id", trap_image_id)
@@ -316,11 +317,6 @@ class CVPipeline:
         if not trap_image_id:
             raise RuntimeError(
                 "trap_image_id is required. Proprietary slicing must use Supabase Stage-1 bbox coordinates."
-            )
-
-        if self._supabase is None:
-            raise RuntimeError(
-                "Supabase is not configured. Cannot run proprietary slicing without Supabase Stage-1 bbox synchronization."
             )
 
         persisted = self._persist_stage1_annotations_to_supabase(
